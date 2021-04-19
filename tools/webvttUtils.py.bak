@@ -31,12 +31,12 @@ def writeTranscriptToWebVTT( transcript, sourceLangCode, WebVTTFileName ):
 	
 def writeTranslationToWebVTT( transcript, sourceLangCode, targetLangCode, WebVTTFileName ):
 	# First get the translation
-	print(( "\n\n==> Translating from " + sourceLangCode + " to " + targetLangCode ))
+	print( "\n\n==> Translating from " + sourceLangCode + " to " + targetLangCode )
 	translation = translateTranscript( transcript, sourceLangCode, targetLangCode )
 	#print( "\n\n==> Translation: " + str(translation))
 		
 	# Now create phrases from the translation
-	textToTranslate = str(translation["TranslatedText"])
+	textToTranslate = unicode(translation["TranslatedText"])
 	phrases = getPhrasesFromTranslation( textToTranslate, targetLangCode )
 	writeWebVTT( phrases, WebVTTFileName, "A:middle L:90%" )
 	
@@ -56,7 +56,7 @@ def getPhrasesFromTranslation( translation, targetLangCode ):
 	c = 0
 	seconds = 0
 
-	print("==> Creating phrases from translation...")
+	print "==> Creating phrases from translation..."
 
 	for word in words:
 
@@ -109,7 +109,7 @@ def getPhrasesFromTranscript( transcript ):
 	x = 0
 	c = 0
 
-	print("==> Creating phrases from transcript...")
+	print "==> Creating phrases from transcript..."
 
 	for item in items:
 
@@ -168,7 +168,7 @@ def translateTranscript( transcript, sourceLangCode, targetLangCode ):
 	
 
 def writeWebVTT( phrases, filename, style ):
-	print("==> Writing phrases to disk...")
+	print "==> Writing phrases to disk..."
 
 	# open the files
 	e = codecs.open(filename,"w+", "utf-8")

@@ -30,6 +30,8 @@ import json
 import boto3
 import re
 import codecs
+import time
+import math
 from audioUtils import *
 
 
@@ -52,12 +54,15 @@ def newPhrase():
 #                 seconds - the duration in seconds to convert to HH:MM:SS,mmm 
 # ==================================================================================	
 	# Format and return a string that contains the converted number of seconds into SRT format
-def getTimeCode( seconds ):
-	t_hund = int(seconds % 1 * 1000)
-	t_seconds = int( seconds )
-	t_secs = ((float( t_seconds) / 60) % 1) * 60
-	t_mins = int( t_seconds / 60 )
-	return str( "%02d:%02d:%02d,%03d" % (00, t_mins, int(t_secs), t_hund ))
+def getTimeCode(seconds):
+# ....t_hund = int(seconds % 1 * 1000)
+# ....t_seconds = int( seconds )
+# ....t_secs = ((float( t_seconds) / 60) % 1) * 60
+# ....t_mins = int( t_seconds / 60 )
+# ....return str( "%02d:%02d:%02d,%03d" % (00, t_mins, int(t_secs), t_hund ))
+    (frac, whole) = math.modf(seconds)
+    frac = frac * 1000
+    return str('%s,%03d' % (time.strftime('%H:%M:%S',time.gmtime(whole)), frac))
 	
 
 # ==================================================================================
@@ -75,6 +80,8 @@ def writeTranscriptToSRT( transcript, sourceLangCode, srtFileName ):
 	writeSRT( phrases, srtFileName )
 	
 
+    
+
 # ==================================================================================
 # Function: writeTranscriptToSRT
 # Purpose: Based on the JSON transcript provided by Amazon Transcribe, get the phrases from the translation 
@@ -87,12 +94,12 @@ def writeTranscriptToSRT( transcript, sourceLangCode, srtFileName ):
 # ==================================================================================
 def writeTranslationToSRT( transcript, sourceLangCode, targetLangCode, srtFileName, region ):
 	# First get the translation
-	print(( "\n\n==> Translating from " + sourceLangCode + " to " + targetLangCode ))
+	print( "\n\n==> Translating from " + sourceLangCode + " to " + targetLangCode )
 	translation = translateTranscript( transcript, sourceLangCode, targetLangCode, region )
 	#print( "\n\n==> Translation: " + str(translation))
 		
 	# Now create phrases from the translation
-	textToTranslate = str(translation["TranslatedText"])
+	textToTranslate = unicode(translation["TranslatedText"])
 	phrases = getPhrasesFromTranslation( textToTranslate, targetLangCode )
 	writeSRT( phrases, srtFileName )
 	
@@ -185,6 +192,7 @@ def getPhrasesFromTranscript( transcript ):
 	nPhrase = True
 	x = 0
 	c = 0
+	lastEndTime = ""
 
 	print("==> Creating phrases from transcript...")
 
@@ -195,6 +203,7 @@ def getPhrasesFromTranscript( transcript ):
 			if item["type"] == "pronunciation":
 				phrase["start_time"] = getTimeCode( float(item["start_time"]) )
 				nPhrase = False
+				lastEndTime =  getTimeCode( float(item["end_time"]) )
 			c+= 1
 		else:	
 			# get the end_time if the item is a pronuciation and store it
@@ -218,6 +227,8 @@ def getPhrasesFromTranscript( transcript ):
 	
 	# if there are any words in the final phrase add to phrases  
 	if(len(phrase["words"]) > 0):
+		if phrase['end_time'] == '':
+            		phrase['end_time'] = lastEndTime
 		phrases.append(phrase)	
 				
 	return phrases
@@ -263,7 +274,7 @@ def translateTranscript( transcript, sourceLangCode, targetLangCode, region ):
 #                 filename - the name of the SRT output file (e.g. "mySRT.srt")
 # ==================================================================================
 def writeSRT( phrases, filename ):
-	print("==> Writing phrases to disk...")
+	print ("==> Writing phrases to disk...")
 
 	# open the files
 	e = codecs.open(filename,"w+", "utf-8")

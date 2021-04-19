@@ -49,7 +49,7 @@ def createTranscribeJob( region, bucket, mediaFile ):
 	# Set up the full uri for the bucket and media file
 	mediaUri = "https://" + "s3-" + region + ".amazonaws.com/" + bucket + mediaFile 
 	
-	print(( "Creating Job: " + "transcribe" + mediaFile + " for " + mediaUri ))
+	print( "Creating Job: " + "transcribe" + mediaFile + " for " + mediaUri )
 	
 	# Use the uuid functionality to generate a unique job name.  Otherwise, the Transcribe service will return an error
 	response = transcribe.start_transcription_job( TranscriptionJobName="transcribe_" + uuid.uuid4().hex + "_" + mediaFile , \

@@ -87,12 +87,12 @@ def writeTranscriptToSRT( transcript, sourceLangCode, srtFileName ):
 # ==================================================================================
 def writeTranslationToSRT( transcript, sourceLangCode, targetLangCode, srtFileName, region ):
 	# First get the translation
-	print(( "\n\n==> Translating from " + sourceLangCode + " to " + targetLangCode ))
+	print( "\n\n==> Translating from " + sourceLangCode + " to " + targetLangCode )
 	translation = translateTranscript( transcript, sourceLangCode, targetLangCode, region )
 	#print( "\n\n==> Translation: " + str(translation))
 		
 	# Now create phrases from the translation
-	textToTranslate = str(translation["TranslatedText"])
+	textToTranslate = unicode(translation["TranslatedText"])
 	phrases = getPhrasesFromTranslation( textToTranslate, targetLangCode )
 	writeSRT( phrases, srtFileName )
 	
@@ -122,7 +122,7 @@ def getPhrasesFromTranslation( translation, targetLangCode ):
 	c = 0
 	seconds = 0
 
-	print("==> Creating phrases from translation...")
+	print "==> Creating phrases from translation..."
 
 	for word in words:
 
@@ -186,7 +186,7 @@ def getPhrasesFromTranscript( transcript ):
 	x = 0
 	c = 0
 
-	print("==> Creating phrases from transcript...")
+	print "==> Creating phrases from transcript..."
 
 	for item in items:
 
@@ -263,7 +263,7 @@ def translateTranscript( transcript, sourceLangCode, targetLangCode, region ):
 #                 filename - the name of the SRT output file (e.g. "mySRT.srt")
 # ==================================================================================
 def writeSRT( phrases, filename ):
-	print("==> Writing phrases to disk...")
+	print "==> Writing phrases to disk..."
 
 	# open the files
 	e = codecs.open(filename,"w+", "utf-8")

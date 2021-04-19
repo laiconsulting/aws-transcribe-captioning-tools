@@ -94,12 +94,12 @@ def writeTranscriptToSRT( transcript, sourceLangCode, srtFileName ):
 # ==================================================================================
 def writeTranslationToSRT( transcript, sourceLangCode, targetLangCode, srtFileName, region ):
 	# First get the translation
-	print( "\n\n==> Translating from " + sourceLangCode + " to " + targetLangCode )
+	print(( "\n\n==> Translating from " + sourceLangCode + " to " + targetLangCode ))
 	translation = translateTranscript( transcript, sourceLangCode, targetLangCode, region )
 	#print( "\n\n==> Translation: " + str(translation))
 		
 	# Now create phrases from the translation
-	textToTranslate = unicode(translation["TranslatedText"])
+	textToTranslate = str(translation["TranslatedText"])
 	phrases = getPhrasesFromTranslation( textToTranslate, targetLangCode )
 	writeSRT( phrases, srtFileName )
 	
