@@ -214,11 +214,18 @@ def getPhrasesFromTranscript( transcript ):
 				phrase["end_time"] = getTimeCode( float(item["end_time"]) )
 				
 		# in either case, append the word to the phrase...
-		phrase["words"].append(item['alternatives'][0]["content"])
-		x += 1
+		# when the first word of the newline is a punctuation, append it to the previous line
+		if c > 1 and x == 0 and item["type"] == "punctuation":
+			#print(c, item['alternatives'][0]["content"] )
+			phrases[-1]["words"].append(item['alternatives'][0]["content"])
+			#phrase["words"].append(item['alternatives'][0]["content"])
+		else:
+			phrase["words"].append(item['alternatives'][0]["content"])
+			x += 1
 		
 		# now add the phrase to the phrases, generate a new phrase, etc.
-		if x == 10:
+		#if x == 10:
+                if (x > 5 and item["type"] == "punctuation" ) or x == 12:
 			#print c, phrase
 			phrases.append(phrase)
 			phrase = newPhrase()
