@@ -62,27 +62,28 @@ for lang in args.outlang:
 	
 	
 # Create Transcription Job
-response = createTranscribeJob( args.region, args.inbucket, args.infile )
+#response = createTranscribeJob( args.region, args.inbucket, args.infile )
 
 # loop until the job successfully completes
-print(( "\n==> Transcription Job: " + response["TranscriptionJob"]["TranscriptionJobName"] + "\n\tIn Progress"), end=' ')
+#print(( "\n==> Transcription Job: " + response["TranscriptionJob"]["TranscriptionJobName"] + "\n\tIn Progress"), end=' ')
 
-while( response["TranscriptionJob"]["TranscriptionJobStatus"] == "IN_PROGRESS"):
-	print(( "."), end=' ')
-	time.sleep( 30 )
-	response = getTranscriptionJobStatus( response["TranscriptionJob"]["TranscriptionJobName"] )
+#while( response["TranscriptionJob"]["TranscriptionJobStatus"] == "IN_PROGRESS"):
+#	print(( "."), end=' ')
+#	time.sleep( 30 )
+#	response = getTranscriptionJobStatus( response["TranscriptionJob"]["TranscriptionJobName"] )
 
-print( "\nJob Complete")
-print(( "\tStart Time: " + str(response["TranscriptionJob"]["CreationTime"]) ))
-print(( "\tEnd Time: "  + str(response["TranscriptionJob"]["CompletionTime"]) ))
-print(( "\tTranscript URI: " + str(response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]) ))
+#print( "\nJob Complete")
+#print(( "\tStart Time: " + str(response["TranscriptionJob"]["CreationTime"]) ))
+#print(( "\tEnd Time: "  + str(response["TranscriptionJob"]["CompletionTime"]) ))
+#print(( "\tTranscript URI: " + str(response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]) ))
 
 # Now get the transcript JSON from AWS Transcribe
-transcript = getTranscript( str(response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]) ) 
+#transcript = getTranscript( str(response["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]) ) 
+transcript = getTranscript( 'https://s3.eu-west-1.amazonaws.com/transcribe-result/json/audio.json' ) 
 # print( "\n==> Transcript: \n" + transcript)
 
 # Create the SRT File for the original transcript and write it out.  
-#writeTranscriptToSRT( transcript, 'en', "subtitles-en.srt" )  
+writeTranscriptToSRT( transcript, 'en', "subtitles-en.srt" )  
 #createVideo( args.infile, "subtitles-en.srt", args.outfilename + "-en." + args.outfiletype, "audio-en.mp3", True)
 
 
