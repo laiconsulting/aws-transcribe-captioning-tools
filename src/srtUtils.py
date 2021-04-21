@@ -43,7 +43,8 @@ from audioUtils import *
 #                 None
 # ==================================================================================
 def newPhrase():
-	return { 'start_time': '', 'end_time': '', 'words' : [] }
+    return { 'start_time': '', 'end_time': '', 'words' : [] ,
+             'start_second': 0, 'end_second': 0, 'punctuation': ''}
 
 
 	
@@ -95,14 +96,111 @@ def writeTranscriptToSRT( transcript, sourceLangCode, srtFileName ):
 def writeTranslationToSRT( transcript, sourceLangCode, targetLangCode, srtFileName, region ):
 	# First get the translation
 	print(( "\n\n==> Translating from " + sourceLangCode + " to " + targetLangCode ))
-	translation = translateTranscript( transcript, sourceLangCode, targetLangCode, region )
+	##translation = translateTranscript( transcript, sourceLangCode, targetLangCode, region )
 	#print( "\n\n==> Translation: " + str(translation))
 		
 	# Now create phrases from the translation
-	textToTranslate = str(translation["TranslatedText"])
-	phrases = getPhrasesFromTranslation( textToTranslate, targetLangCode )
+	##textToTranslate = str(translation["TranslatedText"])
+	##phrases = getPhrasesFromTranslation( textToTranslate, targetLangCode )
+	phrases = getTranslationFromPhrases( getPhrasesFromTranscript( transcript) , targetLangCode )
 	writeSRT( phrases, srtFileName )
-	
+
+
+# ==================================================================================
+# Function: splitPhrase
+# Purpose: split a long phrase into shorter phrases
+# Parameters: 
+#                 ophrase - phrase built by getTranslationFromPhrases
+#                 sourceLangCode - the language code for the original content (e.g. English = "EN")
+#                 targetLangCode - the language code for the translated content (e.g. Spanich = "ES")
+#                 region - the AWS region in which to run the Translation (e.g. "us-east-1")
+# ==================================================================================	
+def splitPhrase( ophrase, sourceLangCode, targetLangCode, region):
+
+	#set up some variables for the first pass
+        phrases = []
+        phrase = newPhrase()
+        nPhrase = True
+        x = 0
+        c = 0
+        lineLengths = [ 7, 9, 11]
+        phrase_startTime = ophrase["start_second"]
+        phrase_endTime = ophrase["end_second"]
+        translation = translateText( ' '.join(phrase["words"]), sourceLangCode, targetLangCode, region)
+        words = translation.split()
+        countWords = len(words)
+        secondPerWord = ( phrase_endTime - phrase_startTime ) / countWords
+        wordsPerLine = max( lineLengths, key = lambda x: countWords % x)
+        seconds = wordsPerLine * secondPerWord
+
+        for word in words:
+
+            # if it is a new phrase, then get the start_time of the first phrase
+            if nPhrase == True:
+                phrase["start_time"] = getTimeCode(phrase_startTime)
+                nPhrase = False
+
+            # Append the words to the phrase...
+            phrase["words"].append(word)
+            x += 1
+
+	    # now add the phrase to the phrases, generate a new phrase, etc.
+            if x == wordsPerLine:
+                phrase["end_time"] = getTimeCode(phrase_startTime + seconds)
+                phrase_startTime += seconds
+                phrases.append(phrase)
+                phrase = newPhrase()
+                nPhrase = True
+                x = 0
+
+        if (len(phrase["words"]) > 0):
+            if phrase["end_time"] == '':
+                phrase["end_time"] = phrase_endTime
+            phrases.append(phrase)
+
+        return phrases
+# ==================================================================================
+# Function: getTranslationFromPhrases
+# Purpose: Translate each phrase in phrases 
+# Parameters: 
+#                 ophrases - phrases built by getPhrasesFromTranscribe
+#                 targetLangCode - the language code for the translated content (e.g. Spanich = "ES")
+# ==================================================================================	
+def getTranslationFromPhrases( ophrases, sourceLangCode, targetLangCode, region ):
+
+	#set up some variables for the first pass
+	phrase =  newPhrase()
+	phrases = []
+	nPhrase = True
+	c = 0
+
+	print("==> Creating translation from phrases...")
+
+	for line in ophrases:
+
+		# if it is a new phrase, then get the start_time of the first phrase
+		if nPhrase == True:
+			phrase["start_time"] = line["start_time"]
+			phrase["start_second"] = line["start_second"]
+			nPhrase = False
+			c += 1
+				
+		# Append the words to the phrase...
+		phrase["words"].extend(line["words"])
+                phrase["end_time"] = line["end_time"]
+                phrase["end_second"] = line["end_second"]
+                phrase["punctuation"] = line["punctuation"]
+		
+		# now add the phrase to the phrases, generate a new phrase, etc.
+		if phrase["punctuation"] == '.':
+                    phrases.extend( splitPhrase(phrase, sourceLangCode, targetLangCode, region) )
+                    phrase = newPhrase()
+                    nPhrase = True
+		
+        if (len(phrase["words"] > 0):
+                phrases.extend( splitPhrase(phrase, sourceLangCode, targetLangCode, region) )
+
+	return phrases
 
 # ==================================================================================
 # Function: getPhrasesFromTranslation
@@ -163,8 +261,8 @@ def getPhrasesFromTranslation( translation, targetLangCode ):
 		# a different duration than the content, MoviePy will sometimes fail with unexpected errors while
 		# processing the subclip.   This is limiting it to something less than the total duration for our example
 		# however, you may need to modify or eliminate this line depending on your content.
-		if c == 30:
-			break
+		#if c == 30:
+			#break
 			
 	return phrases
 	
@@ -202,6 +300,7 @@ def getPhrasesFromTranscript( transcript ):
 		if nPhrase == True:
 			if item["type"] == "pronunciation":
 				phrase["start_time"] = getTimeCode( float(item["start_time"]) )
+				phrase["start_second"] = float(item["start_time"]) 
 				nPhrase = False
 				lastEndTime =  getTimeCode( float(item["end_time"]) )
 			c+= 1
@@ -212,15 +311,19 @@ def getPhrasesFromTranscript( transcript ):
 			# to set the end_time to whatever the last word in the phrase is.
 			if item["type"] == "pronunciation":
 				phrase["end_time"] = getTimeCode( float(item["end_time"]) )
+				phrase["end_second"] =  float(item["end_time"]) 
 				
 		# in either case, append the word to the phrase...
 		# when the first word of the newline is a punctuation, append it to the previous line
 		if c > 1 and x == 0 and item["type"] == "punctuation":
 			#print(c, item['alternatives'][0]["content"] )
 			phrases[-1]["words"].append(item['alternatives'][0]["content"])
+			phrases[-1]["punctuation"].append(item['alternatives'][0]["content"])
 			#phrase["words"].append(item['alternatives'][0]["content"])
 		else:
 			phrase["words"].append(item['alternatives'][0]["content"])
+		        if item["type"] == "punctuation":
+			    phrase["punctuation"].append(item['alternatives'][0]["content"])
 			x += 1
 		
 		# now add the phrase to the phrases, generate a new phrase, etc.
@@ -242,6 +345,33 @@ def getPhrasesFromTranscript( transcript ):
 	
 
 
+# ==================================================================================
+# Function: translateText
+# Purpose: get the JSON response of translated text out of phrase
+# Parameters: 
+#                 txt - text
+#                 sourceLangCode - the language code for the original content (e.g. English = "EN")
+#                 targetLangCode - the language code for the translated content (e.g. Spanich = "ES")
+#                 region - the AWS region in which to run the Translation (e.g. "us-east-1")
+# ==================================================================================
+def translateText( txt, sourceLangCode, targetLangCode, region ):
+	# Get the translation in the target language.  We want to do this first so that the translation is in the full context
+	# of what is said vs. 1 phrase at a time.  This really matters in some lanaguages
+
+	# stringify the transcript
+	#ts = json.loads( transcript )
+
+	# pull out the transcript text and put it in the txt variable
+	#txt = ts["results"]["transcripts"][0]["transcript"]
+		
+	#set up the Amazon Translate client
+	translate = boto3.client(service_name='translate', region_name=region, use_ssl=True)
+	
+	# call Translate  with the text, source language code, and target language code.  The result is a JSON structure containing the 
+	# translated text
+	translation = translate.translate_text(Text=txt,SourceLanguageCode=sourceLangCode, TargetLanguageCode=targetLangCode)
+	
+	return translation
 
 # ==================================================================================
 # Function: translateTranscript
@@ -324,7 +454,8 @@ def getPhraseText( phrase ):
 		
 	out = ""
 	for i in range( 0, length ):
-		if re.match( '[a-zA-Z0-9]', phrase["words"][i]):
+                if not re.match( '[!"#$%&\'()*+,./:;<=>?@\^_`{|}~-]', phrase["words"][i]):
+		#if re.match( '[a-zA-Z0-9]', phrase["words"][i]):
 			if i > 0:
 				out += " " + phrase["words"][i]
 			else:
