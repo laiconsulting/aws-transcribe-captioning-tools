@@ -1,84 +1,96 @@
 1
-00:00:01,139 --> 00:00:02,850
+00:00:01,140 --> 00:00:02,851
 Hm. Ja, ja.
 
 2
-00:00:05,639 --> 00:00:09,371
-Hallo und willkommen bei Leah Ivana hier, Olive on
+00:00:05,641 --> 00:00:08,543
+Hallo und willkommen bei Leah Ivana hier,
 
 3
-00:00:09,371 --> 00:00:11,859
-Nora von dem gemeinsam vorbereiteten Projekt.
+00:00:08,543 --> 00:00:11,860
+Olive on Nora von dem gemeinsam vorbereiteten Projekt.
 
 4
-00:00:12,339 --> 00:00:14,738
-Die andere kann für eine NGO verwendet
+00:00:12,340 --> 00:00:15,082
+Die andere kann für eine NGO verwendet werden,
 
 5
-00:00:14,738 --> 00:00:17,136
-werden, die Kurse zur beruflichen Orientierung als
+00:00:15,082 --> 00:00:18,165
+die Kurse zur beruflichen Orientierung als kleiner als 30
 
 6
-00:00:17,136 --> 00:00:18,850
-kleiner als 30 Jahre anbietet.
+00:00:18,165 --> 00:00:18,851
+Jahre anbietet.
 
 7
-00:00:19,440 --> 00:00:23,505
-Grundlegende Computerklassen, Erste Hilfe und professionelle Kindergartenunterricht
+00:00:19,441 --> 00:00:21,764
+Grundlegende Computerklassen,
 
 8
-00:00:23,505 --> 00:00:26,989
-für Tourismus, Malerei, Landwirtschaft oder Kochen.
+00:00:21,764 --> 00:00:25,829
+Erste Hilfe und professionelle Kindergartenunterricht für Tourismus,
 
 9
-00:00:27,000 --> 00:00:29,179
-Was auch immer ist Ihr Interesse.
+00:00:25,829 --> 00:00:26,990
+Malerei, Landwirtschaft oder Kochen.
 
 10
-00:00:29,219 --> 00:00:31,059
-Wir sind sicher, dass wir die richtige
+00:00:27,001 --> 00:00:29,181
+Was auch immer ist Ihr Interesse.
 
 11
-00:00:31,059 --> 00:00:32,109
-Klasse für Sie haben.
+00:00:29,221 --> 00:00:30,009
+Wir sind sicher,
 
 12
-00:00:32,119 --> 00:00:35,074
-Unsere professionellen Lehrer setzen sich gerne mit Ihnen in
+00:00:30,009 --> 00:00:32,110
+dass wir die richtige Klasse für Sie haben.
 
 13
-00:00:35,074 --> 00:00:38,029
-Verbindung und helfen Ihnen, Ihr Wissen zu verbessern, ihre
+00:00:32,120 --> 00:00:35,075
+Unsere professionellen Lehrer setzen sich gerne mit Ihnen in
 
 14
-00:00:38,029 --> 00:00:40,000
-Telefonnummern und den Flyer zu finden.
+00:00:35,075 --> 00:00:36,389
+Verbindung und helfen Ihnen,
 
 15
-00:00:40,000 --> 00:00:42,158
-Du hast ein Zelt und kontaktierst sie,
+00:00:36,389 --> 00:00:37,702
+Ihr Wissen zu verbessern,
 
 16
-00:00:42,158 --> 00:00:43,700
-wann immer du anfangen willst.
+00:00:37,702 --> 00:00:40,000
+ihre Telefonnummern und den Flyer zu finden.
 
 17
-00:00:43,710 --> 00:00:45,189
-Zögere nicht.
+00:00:40,000 --> 00:00:42,159
+Du hast ein Zelt und kontaktierst sie,
 
 18
-00:00:45,200 --> 00:00:46,979
-China ist in unseren Kursen.
+00:00:42,159 --> 00:00:43,701
+wann immer du anfangen willst.
 
 19
-00:00:46,990 --> 00:00:49,756
-Holen Sie sich Ihr Zertifikat und lernen Sie etwas,
+00:00:43,710 --> 00:00:45,190
+Zögere nicht.
 
 20
-00:00:49,756 --> 00:00:52,523
-das Ihnen in Ihrer Zukunft helfen wird. Wir freuen
+00:00:45,201 --> 00:00:46,980
+China ist in unseren Kursen.
 
 21
-00:00:52,523 --> 00:00:54,060
-uns darauf, Sie bald kennenzulernen.
+00:00:46,990 --> 00:00:49,757
+Holen Sie sich Ihr Zertifikat und lernen Sie etwas,
+
+22
+00:00:49,757 --> 00:00:51,909
+das Ihnen in Ihrer Zukunft helfen wird.
+
+23
+00:00:51,909 --> 00:00:53,138
+Wir freuen uns darauf,
+
+24
+00:00:53,138 --> 00:00:54,060
+Sie bald kennenzulernen.
 

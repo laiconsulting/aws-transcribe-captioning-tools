@@ -102,8 +102,83 @@ def writeTranslationToSRT( transcript, sourceLangCode, targetLangCode, srtFileNa
         # Now create phrases from the translation
         ##textToTranslate = str(translation["TranslatedText"])
         ##phrases = getPhrasesFromTranslation( textToTranslate, targetLangCode )
-        phrases = getTranslationFromPhrases( getPhrasesFromTranscript( transcript) , sourceLangCode, targetLangCode, region )
-        writeSRT( phrases, srtFileName )
+        #phrases = getTranslationFromPhrases( getPhrasesFromTranscript( transcript) , sourceLangCode, targetLangCode, region )
+        #writeSRT( phrases, srtFileName )
+        phrases = getMergedPhrases( getPhrasesFromTranscript( transcript) )
+        #print(phrases)
+        writeSRT( splitPhrases( phrases, sourceLangCode, targetLangCode, region), srtFileName )
+
+# ==================================================================================
+# Function: splitPhrases
+# Purpose: split a long phrases into shorter phrases
+# Parameters: 
+#                 ophrases - phrases built by getTranslationFromPhrases
+#                 sourceLangCode - the language code for the original content (e.g. English = "EN")
+#                 targetLangCode - the language code for the translated content (e.g. Spanich = "ES")
+#                 region - the AWS region in which to run the Translation (e.g. "us-east-1")
+# ==================================================================================    
+def splitPhrases( ophrases, sourceLangCode, targetLangCode, region):
+
+        #set up some variables for the first pass
+        phrases = []
+        x = 0
+        c = 0
+        lineLengths = [5, 7, 9]
+        phrase_startTime = 0
+        phrase_endTime = 0
+        translation = ''
+
+        #createAudioTrackFromText( translated_txt, targetLangCode, audioFileName, audioDuration ):
+
+        for ophrase in ophrases:
+
+            phrase = newPhrase()
+            nPhrase = True
+            phrase_startTime = ophrase["start_second"]
+            phrase_endTime = ophrase["end_second"]
+            translation = translateText( ' '.join(ophrase["words"]), sourceLangCode, targetLangCode, region)
+            translated_txt = str(translation["TranslatedText"])
+            words = translated_txt.split()
+            countWords = len(words)
+            audioDuration = phrase_endTime - phrase_startTime
+            if countWords:
+                secondPerWord = audioDuration / countWords
+            #wordsPerLine = max( lineLengths, key = lambda x: countWords % x)
+            wordsPerLine = 9
+            seconds = wordsPerLine * secondPerWord
+            c += 1
+            #print(c)
+            #print(ophrase)
+            #print(words)
+    
+            for word in words:
+
+                # if it is a new phrase, then get the start_time of the first phrase
+                if nPhrase == True:
+                    phrase["start_time"] = getTimeCode(phrase_startTime)
+                    nPhrase = False
+
+                # Append the words to the phrase...
+                phrase["words"].append(word)
+                x += 1
+    
+                # now add the phrase to the phrases, generate a new phrase, etc.
+                if (x == wordsPerLine) or (x > 2 and word[-1] in ['.',',']) :
+                    phrase["end_time"] = getTimeCode(min([phrase_startTime + x * secondPerWord,phrase_endTime]))
+                    phrase_startTime += x * secondPerWord
+                    #print(x,phrase)
+                    phrases.append(phrase)
+                    phrase = newPhrase()
+                    nPhrase = True
+                    x = 0
+
+            if (len(phrase["words"]) > 0):
+                if phrase["end_time"] == '':
+                    phrase["end_time"] = getTimeCode( phrase_endTime )
+                phrases.append(phrase)
+                #print(phrase)
+
+        return phrases
 
 
 # ==================================================================================
@@ -127,11 +202,15 @@ def splitPhrase( ophrase, sourceLangCode, targetLangCode, region):
         phrase_startTime = ophrase["start_second"]
         phrase_endTime = ophrase["end_second"]
         translation = translateText( ' '.join(ophrase["words"]), sourceLangCode, targetLangCode, region)
-        words = str(translation["TranslatedText"]).split()
+        translated_txt = str(translation["TranslatedText"])
+        words = translated_txt.split()
         countWords = len(words)
-        secondPerWord = ( phrase_endTime - phrase_startTime ) / countWords
+        audioDuration = phrase_endTime - phrase_startTime
+        secondPerWord = audioDuration / countWords
         wordsPerLine = max( lineLengths, key = lambda x: countWords % x)
         seconds = wordsPerLine * secondPerWord
+
+        #createAudioTrackFromText( translated_txt, targetLangCode, audioFileName, audioDuration ):
 
         for word in words:
 
@@ -159,6 +238,51 @@ def splitPhrase( ophrase, sourceLangCode, targetLangCode, region):
             phrases.append(phrase)
 
         return phrases
+
+# ==================================================================================
+# Function: getMergedPhrases
+# Purpose: Translate each phrase in phrases 
+# Parameters: 
+#                 ophrases - phrases built by getPhrasesFromTranscribe
+# ==================================================================================    
+def getMergedPhrases( ophrases ):
+
+        #set up some variables for the first pass
+        phrase =  newPhrase()
+        phrases = []
+        nPhrase = True
+        c = 0
+
+        print("==> Merging phrases...")
+
+        for line in ophrases:
+
+                # if it is a new phrase, then get the start_time of the first phrase
+                if nPhrase == True:
+                        phrase["start_time"] = line["start_time"]
+                        phrase["start_second"] = line["start_second"]
+                        nPhrase = False
+                        c += 1
+                                
+                # Append the words to the phrase...
+                phrase["words"].extend(line["words"])
+                phrase["end_time"] = line["end_time"]
+                phrase["end_second"] = line["end_second"]
+                phrase["punctuation"] = line["punctuation"]
+                
+                # now add the phrase to the phrases, generate a new phrase, etc.
+                if phrase["punctuation"] == '.':
+                    #phrases.extend( splitPhrase(phrase, sourceLangCode, targetLangCode, region) )
+                    phrases.append( phrase )
+                    phrase = newPhrase()
+                    nPhrase = True
+                
+        if (len(phrase["words"]) > 0):
+                #phrases.extend( splitPhrase(phrase, sourceLangCode, targetLangCode, region) )
+                phrases.append( phrase )
+
+        return phrases
+
 # ==================================================================================
 # Function: getTranslationFromPhrases
 # Purpose: Translate each phrase in phrases 
@@ -290,6 +414,7 @@ def getPhrasesFromTranscript( transcript ):
         nPhrase = True
         x = 0
         c = 0
+        shift =  0.001
         lastEndTime = ""
 
         print("==> Creating phrases from transcript...")
@@ -299,10 +424,10 @@ def getPhrasesFromTranscript( transcript ):
                 # if it is a new phrase, then get the start_time of the first item
                 if nPhrase == True:
                         if item["type"] == "pronunciation":
-                                phrase["start_time"] = getTimeCode( float(item["start_time"]) )
-                                phrase["start_second"] = float(item["start_time"]) 
+                                phrase["start_time"] = getTimeCode( float(item["start_time"]) + shift )
+                                phrase["start_second"] = float(item["start_time"]) + shift
                                 nPhrase = False
-                                lastEndTime =  getTimeCode( float(item["end_time"]) )
+                                lastEndTime =  getTimeCode( float(item["end_time"]) + shift )
                         c+= 1
                 else:   
                         # get the end_time if the item is a pronuciation and store it
@@ -310,8 +435,8 @@ def getPhrasesFromTranscript( transcript ):
                         # Punctuation doesn't contain timing information, so we'll want
                         # to set the end_time to whatever the last word in the phrase is.
                         if item["type"] == "pronunciation":
-                                phrase["end_time"] = getTimeCode( float(item["end_time"]) )
-                                phrase["end_second"] =  float(item["end_time"]) 
+                                phrase["end_time"] = getTimeCode( float(item["end_time"]) + shift )
+                                phrase["end_second"] =  float(item["end_time"]) + shift
                                 
                 # in either case, append the word to the phrase...
                 # when the first word of the newline is a punctuation, append it to the previous line

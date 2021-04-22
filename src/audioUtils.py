@@ -64,6 +64,41 @@ def writeAudio( output_file, stream ):
 		sys.exit(-1)
 
 # ==================================================================================
+# Function: createAudioTrackFromText
+# Purpose: Using the provided translated text, use Amazon Polly to synthesize speech
+# Prrameters: 
+#                 transcript - the Amazon Transcribe JSON structure to translate
+#                 targetLangCode - the language code for the translated content (e.g. Spanich = "ES")
+#                 audioFileName - the name (including extension) of the target audio file (e.g. "abc.mp3")
+#                 audioDuration - the duration the audio is allowed
+# ==================================================================================
+def createAudioTrackFromText( translated_txt, targetLangCode, audioFileName, audioDuration ):
+	print( "\n==> createAudioTrackFromText " )
+	
+	# Set up the polly and translate services
+	client = boto3.client('polly')
+	#translate = boto3.client(service_name='translate', region_name=region, use_ssl=True)
+
+	#get the transcript text
+	#temp = json.loads( transcript)
+	#transcript_txt = temp["results"]["transcripts"][0]["transcript"]
+	
+	voiceId = getVoiceId( targetLangCode )
+	
+	# Now translate it.
+	#translated_txt = str((translate.translate_text(Text=transcript_txt, SourceLanguageCode=sourceLangCode, TargetLanguageCode=targetLangCode))["TranslatedText"])[:2999]
+
+	# Use the translated text to create the synthesized speech
+	response = client.synthesize_speech(Engine='neural', TextType='ssml', OutputFormat="mp3", SampleRate="22050", 
+                Text='<speak> <prosody amazon:max-duration="' + str(audioDuration * 1000) + 'ms"> ' + translated_txt + ' </prosody> </speak>', VoiceId=voiceId)
+	
+	if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
+		print( "\t==> Successfully called Polly for speech synthesis")
+		writeAudioStream( response, audioFileName )
+	else:
+		print( "\t==> Error calling Polly for speech synthesis")
+
+# ==================================================================================
 # Function: createAudioTrackFromTranslation
 # Purpose: Using the provided transcript, get a translation from Amazon Translate, then use Amazon Polly to synthesize speech
 # Prrameters: 
@@ -129,6 +164,16 @@ def getVoiceId( targetLangCode ):
 		voiceId = "Penelope"
 	elif targetLangCode == "de":
 		voiceId = "Marlene"
+	elif targetLangCode == "ar":
+		voiceId = "Zeina"
+	elif targetLangCode == "zh":
+		voiceId = "Zhiyu"
+	elif targetLangCode == "tr":
+		voiceId = "Filiz"
+	elif targetLangCode == "en":
+		voiceId = "Amy"
+	elif targetLangCode == "fr":
+		voiceId = "Celine"
 		
 	return voiceId
 	
@@ -145,7 +190,7 @@ def getSecondsFromTranslation( textToSynthesize, targetLangCode, audioFileName )
 
 	# Set up the polly and translate services
 	client = boto3.client('polly')
-	translate = boto3.client(service_name='translate', region_name="us-east-1", use_ssl=True)
+	#translate = boto3.client(service_name='translate', region_name="us-east-1", use_ssl=True)
 	
 	# Use the translated text to create the synthesized speech
 	response = client.synthesize_speech( OutputFormat="mp3", SampleRate="22050", Text=textToSynthesize, VoiceId=getVoiceId( targetLangCode ) )
