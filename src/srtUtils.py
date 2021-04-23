@@ -128,6 +128,7 @@ def splitPhrases( ophrases, sourceLangCode, targetLangCode, region):
         phrase_startTime = 0
         phrase_endTime = 0
         translation = ''
+        shift = 0.001
 
         sound0 = AudioSegment.from_file("audio.mp3")
 
@@ -150,11 +151,11 @@ def splitPhrases( ophrases, sourceLangCode, targetLangCode, region):
             seconds = wordsPerLine * secondPerWord
             c += 1
             audioFileName = "phraseAudio_" + str(c) + ".mp3"
-            outFileName = "track-" + targetLangCode + ".mp3"
+            outFileName = "track-" + targetLangCode + ".acc"
             #print(c)
             #print(ophrase)
             #print(words)
-            createAudioTrackFromText( translated_txt, targetLangCode, region, audioFileName, audioDuration )
+            createAudioTrackFromText( translated_txt, targetLangCode, region, audioFileName, audioDuration - shift )
             sound0 = overlayAudio( sound0, audioFileName, phrase_startTime * 1000)
     
             for word in words:
@@ -185,7 +186,7 @@ def splitPhrases( ophrases, sourceLangCode, targetLangCode, region):
                 #print(phrase)
 
         print("\n==> Writing track: {:s}".format(outFileName))
-        sound0.export(outFileName)
+        sound0.export(outFileName,format="adts")
 
         return phrases
 
