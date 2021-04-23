@@ -36,6 +36,25 @@ import contextlib
 from moviepy.editor import *
 from moviepy import editor
 from contextlib import closing
+from pydub import AudioSegment
+
+# ==================================================================================
+# Function: overlayAudio
+# Purpose: overlay speech synthesis on original audio
+# Parameters: 
+#                 sound0 - the original AudioSegment to be overlaid
+#                 input_file - the name + extension of the input file (e.g. "abc.mp3")
+#                 position - position the overlay starts in ms
+# ==================================================================================
+def overlayAudio( sound0, input_file, position ):
+        print( "\t==> Overlaying track {:s} at positon {:.3f}.".format( input_file, position/1000))
+        sound1 = AudioSegment.from_file(input_file)
+        sound1 = sound1.apply_gain(-sound1.max_dBFS)
+        sound0 = sound0.apply_gain(-sound1.max_dBFS)
+        sound0 = sound0.overlay(sound1,position = position, gain_during_overlay = -12)
+        return sound0
+
+
 
 # ==================================================================================
 # Function: writeAudio
@@ -72,11 +91,11 @@ def writeAudio( output_file, stream ):
 #                 audioFileName - the name (including extension) of the target audio file (e.g. "abc.mp3")
 #                 audioDuration - the duration the audio is allowed
 # ==================================================================================
-def createAudioTrackFromText( translated_txt, targetLangCode, audioFileName, audioDuration ):
+def createAudioTrackFromText( translated_txt, targetLangCode, region, audioFileName, audioDuration ):
 	print( "\n==> createAudioTrackFromText " )
 	
 	# Set up the polly and translate services
-	client = boto3.client('polly')
+	client = boto3.client('polly',region_name = region)
 	#translate = boto3.client(service_name='translate', region_name=region, use_ssl=True)
 
 	#get the transcript text
@@ -89,7 +108,8 @@ def createAudioTrackFromText( translated_txt, targetLangCode, audioFileName, aud
 	#translated_txt = str((translate.translate_text(Text=transcript_txt, SourceLanguageCode=sourceLangCode, TargetLanguageCode=targetLangCode))["TranslatedText"])[:2999]
 
 	# Use the translated text to create the synthesized speech
-	response = client.synthesize_speech(Engine='neural', TextType='ssml', OutputFormat="mp3", SampleRate="22050", 
+	response = client.synthesize_speech(#Engine='neural', 
+                TextType='ssml', OutputFormat="mp3", SampleRate="22050", 
                 Text='<speak> <prosody amazon:max-duration="' + str(audioDuration * 1000) + 'ms"> ' + translated_txt + ' </prosody> </speak>', VoiceId=voiceId)
 	
 	if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
